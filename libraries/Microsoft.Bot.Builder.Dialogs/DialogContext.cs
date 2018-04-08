@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Bot.Builder.Dialogs
 {
-    public class DialogContext<C>
+    public class DialogContext
     {
-        private DialogSet<C> _dialogs;
-        private C _context;
-        private Stack<DialogInstance> _stack;
+        public DialogSet Dialogs { get; set; }
+        public ITurnContext Context { get; set; }
+        public Stack<DialogInstance> Stack { get; set; }
 
         /// <summary>
         /// Creates a new DialogContext instance.
@@ -20,19 +20,19 @@ namespace Microsoft.Bot.Builder.Dialogs
         /// <param name="dialogs">Parent dialog set.</param>
         /// <param name="context">Context for the current turn of conversation with the user.</param>
         /// <param name="stack">Current dialog stack.</param>
-        public DialogContext(DialogSet<C> dialogs, C context, Stack<DialogInstance> stack)
+        public DialogContext(DialogSet dialogs, ITurnContext context, Stack<DialogInstance> stack)
         {
-            _dialogs = dialogs;
-            _context = context;
-            _stack = stack;
+            Dialogs = dialogs;
+            Context = context;
+            Stack = stack;
         }
 
         /// <summary>
         /// Returns the cached instance of the active dialog on the top of the stack or `undefined` if the stack is empty.
         /// </summary>
-        public DialogInstance Instance()
+        public DialogInstance Instance
         {
-            return _stack.LastOrDefault();
+            get { return Stack.LastOrDefault(); }
         }
 
         /// <summary>
@@ -40,10 +40,10 @@ namespace Microsoft.Bot.Builder.Dialogs
         /// </summary>
         /// <param name="dialogId">ID of the dialog to start.</param>
         /// <param name="dialogArgs">(Optional) additional argument(s) to pass to the dialog being started.</param>
-        public async Task<DialogResult> Begin(string dialogId, object dialogArgs = null)
+        public async Task<DialogResult<T>> Begin<T>(string dialogId, object dialogArgs = null)
         {
             // Lookup dialog
-            var dialog = _dialogs.Find(dialogId);
+            var dialog = Dialogs.Find<T>(dialogId);
             if (dialog == null)
             {
                 throw new Exception($"DialogContext.begin(): A dialog with an id of '{dialogId}' wasn't found.");
@@ -56,10 +56,10 @@ namespace Microsoft.Bot.Builder.Dialogs
                 State = new object()
             };
 
-            _stack.Push(instance);
+            Stack.Push(instance);
 
             // Call dialogs begin() method.
-            return EnsureDialogResult(await dialog.DialogBegin(this, dialogArgs));
+            return EnsureDialogResult<T>(await dialog.DialogBegin(this, dialogArgs));
         }
 
         /// <summary>
@@ -82,35 +82,33 @@ namespace Microsoft.Bot.Builder.Dialogs
         /// its `Dialog.continue()` method. You can check `context.responded` after the call completes
         /// to determine if a dialog was run and a reply was sent to the user.
         /// </summary>
-        public async Task<DialogResult> Continue()
+        public async Task<DialogResult<T>> Continue<T>()
         {
             // Check for a dialog on the stack
-            var instance = Instance();
-            if (instance != null)
+            if (Instance != null)
             {
-
                 // Lookup dialog
-                var dialog = _dialogs.Find(instance.Id);
+                var dialog = Dialogs.Find<T>(Instance.Id);
                 if (dialog != null)
                 {
-                    throw new Exception($"DialogSet.continue(): Can't continue dialog. A dialog with an id of '{instance.Id}' wasn't found.");
+                    throw new Exception($"DialogSet.continue(): Can't continue dialog. A dialog with an id of '{Instance.Id}' wasn't found.");
                 }
 
                 // Check for existence of a continue() method
                 if (dialog.HasDialogContinue)
                 {
                         // Continue execution of dialog
-                        return EnsureDialogResult(await dialog.DialogContinue(this));
+                        return EnsureDialogResult<T>(await dialog.DialogContinue(this));
                 }
                 else
                 {
                     // Just end the dialog
-                    return await End();
+                    return await End(default(T));
                 }
             }
             else
             {
-                return new DialogResult { Active = false };
+                return new DialogResult<T> { Active = false };
             }
         }
 
@@ -125,30 +123,29 @@ namespace Microsoft.Bot.Builder.Dialogs
         /// parent dialogs on the stack then processing of the turn will end.
         /// </summary>
         /// @param result (Optional) result to pass to the parent dialogs `Dialog.resume()` method.
-        public async Task<DialogResult> End(object result = null)
+        public async Task<DialogResult<T>> End<T>(T result)
         {
             // Pop active dialog off the stack
-            if (!_stack.Any())
+            if (!Stack.Any())
             {
-                _stack.Pop();
+                Stack.Pop();
             }
 
             // Resume previous dialog
-            var instance = Instance();
-            if (instance != null)
+            if (Instance != null)
             {
                 // Lookup dialog
-                var dialog = _dialogs.Find(instance.Id);
+                var dialog = Dialogs.Find<T>(Instance.Id);
                 if (dialog == null)
                 {
-                    throw new Exception($"DialogContext.end(): Can't resume previous dialog. A dialog with an id of '{instance.Id}' wasn't found.");
+                    throw new Exception($"DialogContext.end(): Can't resume previous dialog. A dialog with an id of '{Instance.Id}' wasn't found.");
                 }
 
                 // Check for existence of a resumeDialog() method
                 if (dialog.HasDialogResume)
                 {
                     // Return result to previous dialog
-                    return EnsureDialogResult(await dialog.DialogResume(this, result));
+                    return EnsureDialogResult<T>(await dialog.DialogResume(this, result));
                 }
                 else
                 {
@@ -158,7 +155,7 @@ namespace Microsoft.Bot.Builder.Dialogs
             }
             else
             {
-                return new DialogResult
+                return new DialogResult<T>
                 {
                     Active = false,
                     Result = result
@@ -169,10 +166,10 @@ namespace Microsoft.Bot.Builder.Dialogs
         /// <summary>
         /// Deletes any existing dialog stack thus cancelling all dialogs on the stack.
         /// </summary>
-        public DialogContext<C> EndAll()
+        public DialogContext EndAll()
         {
             // Cancel any active dialogs
-            _stack.Clear();
+            Stack.Clear();
             return this;
         }
 
@@ -182,21 +179,21 @@ namespace Microsoft.Bot.Builder.Dialogs
         /// </summary>
         /// <param name="dialogId">ID of the new dialog to start.</param>
         /// <param name="dialogArgs">(Optional) additional argument(s) to pass to the new dialog.</param>
-        public Task<DialogResult> Replace(string dialogId, object dialogArgs = null)
+        public Task<DialogResult<T>> Replace<T>(string dialogId, object dialogArgs = null)
         {
             // Pop stack
-            if (_stack.Any())
+            if (Stack.Any())
             {
-                _stack.Pop();
+                Stack.Pop();
             }
 
             // Start replacement dialog
-            return Begin(dialogId, dialogArgs);
+            return Begin<T>(dialogId, dialogArgs);
         }
 
-        private DialogResult EnsureDialogResult(object result)
+        private DialogResult<T> EnsureDialogResult<T>(object result)
         {
-            return result is DialogResult ? (DialogResult)result : new DialogResult { Active = _stack.Any() };
+            return result is DialogResult<T> ? (DialogResult<T>)result : new DialogResult<T> { Active = Stack.Any() };
         }
     }
 }

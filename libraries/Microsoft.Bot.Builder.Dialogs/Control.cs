@@ -5,25 +5,41 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Bot.Builder.Dialogs
 {
-    public class Control<R, C> : IDialog<C>
+    /// <summary>
+    /// Base class for controls
+    /// </summary>
+    public abstract class Control<T> : Dialog<T>
     {
-        public bool HasDialogContinue => true;
+        private DialogOptions _defaultOptions;
 
-        public bool HasDialogResume => true;
-
-        public Task<object> DialogBegin(DialogContext<C> dc, object dialogArgs = null)
+        /// <summary>
+        /// Creates a new Control instance.
+        /// </summary>
+        /// <param name="defaultOptions">(Optional) set of default options that should be passed to controls root dialog. These will be merged with arguments passed in by the caller.</param>
+        public Control(DialogOptions defaultOptions = null)
         {
-            throw new System.NotImplementedException();
+            _defaultOptions = defaultOptions;
         }
 
-        public Task<object> DialogContinue(DialogContext<C> dc)
+        public Task<DialogResult<T>> Begin(TurnContext context, object state, DialogOptions options)
         {
-            throw new System.NotImplementedException();
-        }
+            // Create empty dialog set and ourselves to it
+            var dialogs = new DialogSet();
+            dialogs.Add("control", this);
 
-        public Task<object> DialogResume(DialogContext<C> dc, object result = null)
+            // Start the control
+            var cdc = dialogs.CreateContext(context, state);
+            return cdc.Begin<T>("control", options);
+        }
+        public Task<DialogResult<T>> Continue(TurnContext context, object state)
         {
-            throw new System.NotImplementedException();
+            // Create empty dialog set and ourselves to it
+            var dialogs = new DialogSet();
+            dialogs.Add("control", this);
+
+            // Start the control
+            var cdc = dialogs.CreateContext(context, state);
+            return cdc.Continue<T>();
         }
     }
 }

@@ -7,7 +7,7 @@ namespace Microsoft.Bot.Builder.Dialogs
     /// Result returned to the caller of one of the various stack manipulation methods and used to
     /// return the result from a final call to `DialogContext.end()` to the bots logic.
     /// </summary>
-    public class DialogResult
+    public class DialogResult<T>
     {
         /// <summary>
         /// This will be `true` if there is still an active dialog on the stack.
@@ -23,6 +23,6 @@ namespace Microsoft.Bot.Builder.Dialogs
         ///
         /// In all cases where it's populated, [active](#active) will be `false`.        
         /// </summary>
-        public object Result { get; set; }
+        public T Result { get; set; }
     }
 }
