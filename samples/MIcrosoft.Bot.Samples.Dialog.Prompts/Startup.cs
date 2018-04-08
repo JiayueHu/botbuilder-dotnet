@@ -6,13 +6,14 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.BotFramework;
+using Microsoft.Bot.Builder.Core.Extensions;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Rest.TransientFaultHandling;
 
-namespace Microsoft.Bot.Samples.Dailog.Prompts
+namespace Microsoft.Bot.Samples.Dialog.Prompts
 {
     public class Startup
     {
@@ -38,6 +39,8 @@ namespace Microsoft.Bot.Samples.Dailog.Prompts
                 options.EnableProactiveMessages = true;
                 options.ConnectorClientRetryPolicy = new RetryPolicy(
                     new BotFrameworkHttpStatusCodeErrorDetectionStrategy(), 3, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(1));
+
+                options.Middleware.Add(new ConversationState<ConversationData>(new MemoryStorage()));
             });
         }
 

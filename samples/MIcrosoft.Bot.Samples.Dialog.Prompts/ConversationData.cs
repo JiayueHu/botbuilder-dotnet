@@ -1,13 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace Microsoft.Bot.Builder.Dialogs.Prompts
+namespace Microsoft.Bot.Samples.Dialog.Prompts
 {
-    public class DatetimePrompt
+    public class ConversationData : Dictionary<string, object>
     {
     }
 }

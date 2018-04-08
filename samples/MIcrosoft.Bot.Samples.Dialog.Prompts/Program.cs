@@ -4,7 +4,7 @@
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
-namespace Microsoft.Bot.Samples.Dailog.Prompts
+namespace Microsoft.Bot.Samples.Dialog.Prompts
 {
     public class Program
     {

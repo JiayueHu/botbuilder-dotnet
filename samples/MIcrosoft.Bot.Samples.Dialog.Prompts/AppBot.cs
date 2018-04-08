@@ -1,12 +1,43 @@
-﻿using System.Threading.Tasks;
-using Microsoft.Bot.Builder;
-using Microsoft.Bot.Schema;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
-namespace Microsoft.Bot.Samples.Dailog.Prompts
+using System.Threading.Tasks;
+using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Core.Extensions;
+using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.Dialogs.Prompts;
+using Microsoft.Bot.Schema;
+using Microsoft.Recognizers.Text;
+
+namespace Microsoft.Bot.Samples.Dialog.Prompts
 {
     public class AppBot : IBot
     {
-        public AppBot() { }
+        private DialogSet _dialogs;
+
+        public AppBot()
+        {
+            _dialogs = new DialogSet();
+
+            // Add prompts
+            //_dialogs.Add("choicePrompt", new ChoicePrompt());
+            _dialogs.Add("confirmPrompt", new ConfirmPrompt(Culture.English));
+            //_dialogs.Add("datetimePrompt", new DatetimePrompt());
+            _dialogs.Add("numberPrompt", new NumberPrompt<float>(Culture.English));
+            _dialogs.Add("textPrompt", new TextPrompt());
+            //_dialogs.Add("attachmentPrompt", new AttachmentPrompt());
+
+            _dialogs.Add("mainMenu", new WaterfallStep<string>[] {
+                delegate (DialogContext dc, object args, SkipStepFunction next)
+                {
+                    return Task.FromResult(new DialogResult<string> { });
+                },
+                delegate (DialogContext dc, object args, SkipStepFunction next)
+                {
+                    return Task.FromResult(new DialogResult<string> { });
+                }
+            });
+        }
 
         public async Task OnReceiveActivity(ITurnContext context)
         {
@@ -14,30 +45,22 @@ namespace Microsoft.Bot.Samples.Dailog.Prompts
             {
                 case ActivityTypes.Message:
 
-                    /*
-                    // Create dialog context
-                    const state = conversationState.get(context);
-                    const dc = dialogs.createContext(context, state);
+                    var state = ConversationState<ConversationData>.Get(context);
 
-                    // Check for cancel
-                    const utterance = (context.activity.text || '').trim().toLowerCase();
-                    if (utterance === 'menu' || utterance === 'cancel')
+                    var dc = _dialogs.CreateContext(context, state);
+
+                    var utterance = (context.Activity.Text ?? string.Empty).Trim().ToLower();
+                    if (utterance == "menu" || utterance == "cancel")
                     {
-                        await dc.endAll();
+                        dc.EndAll();
                     }
 
-                    // Continue the current dialog
-                    await dc.continue();
+                    await dc.Continue<string>();
 
-                    // Show menu if no response sent
-                    if (!context.responded)
+                    if (!context.Responded)
                     {
-                        await dc.begin('mainMenu');
+                        await dc.Begin<string>("mainMenu");
                     }
-                    */
-
-                    //TODO: remove this
-                    await context.SendActivity($"TESTING '{context.Activity.Text}'");
 
                     break;
 
