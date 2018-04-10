@@ -44,17 +44,13 @@ namespace Microsoft.Bot.Builder.Dialogs
         public DialogContext CreateContext(ITurnContext context, object state)
         {
             var d = (IDictionary<string, object>)state;
-            Stack<DialogInstance> dialogStack;
             object value;
-            if (d.TryGetValue("dialogStack", out value))
+            if (!d.TryGetValue("dialogStack", out value))
             {
-                dialogStack = (Stack<DialogInstance>)value;
+                value = new Stack<DialogInstance>();
+                d["dialogStack"] = value;
             }
-            else
-            {
-                dialogStack = new Stack<DialogInstance>();
-            }
-            return new DialogContext(this, context, dialogStack);
+            return new DialogContext(this, context, (Stack<DialogInstance>)value);
         }
 
         /// <summary>

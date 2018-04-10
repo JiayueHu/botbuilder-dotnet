@@ -7,20 +7,17 @@ using static Microsoft.Bot.Builder.Prompts.PromptValidatorEx;
 
 namespace Microsoft.Bot.Builder.Dialogs.Prompts
 {
-    public class NumberPrompt<T> : Prompt<NumberResult<T>>
+    public class RangePrompt : Prompt<RangeResult>
     {
-        private Builder.Prompts.NumberPrompt<T> _prompt;
+        // TODO: the Prompt library RangePrompt appears to only support float
+        private Builder.Prompts.RangePrompt<float> _prompt;
 
-        public NumberPrompt(string culture, PromptValidator<NumberResult<T>> validator = null)
+        public RangePrompt(string culture, PromptValidator<RangeResult> validator = null)
             : base(validator)
         {
-            _prompt = new Builder.Prompts.NumberPrompt<T>(culture, validator);
+            _prompt = new Builder.Prompts.RangePrompt<float>(culture, validator);
         }
-        protected NumberPrompt(Builder.Prompts.NumberPrompt<T> prompt, PromptValidator<NumberResult<T>> validator = null)
-            : base(validator)
-        {
-            _prompt = prompt;
-        }
+
         protected override Task OnPrompt(DialogContext dc, PromptOptions options, bool isRetry)
         {
             if (isRetry)
@@ -48,9 +45,9 @@ namespace Microsoft.Bot.Builder.Dialogs.Prompts
             return Task.CompletedTask;
         }
 
-        protected override async Task<DialogResult<NumberResult<T>>> OnRecognize(DialogContext dc, PromptOptions options)
+        protected override async Task<DialogResult<RangeResult>> OnRecognize(DialogContext dc, PromptOptions options)
         {
-            return new DialogResult<NumberResult<T>>
+            return new DialogResult<RangeResult>
             {
                 Active = false,
                 Result = await _prompt.Recognize(dc.Context)

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Bot.Schema;
 
 namespace Microsoft.Bot.Builder.Dialogs
 {
@@ -69,13 +70,27 @@ namespace Microsoft.Bot.Builder.Dialogs
         /// <param name="dialogId">ID of the prompt to start.</param>
         /// <param name="prompt">Initial prompt to send the user.</param>
         /// <param name="choicesOrOptions">(Optional) array of choices to prompt the user for or additional prompt options.</param>
-
-        //TODO: TypeScript implementation relies on Choice - need botbuilder-choice
             
-        //public static Task<DialogResult> Prompt<O>(string dialogId, Tuple<string, Activity> prompt, Tuple<string, Choice> choicesOrOptions = null)
-        //{
-        //    throw new NotImplementedException("Helper function to simplify formatting...");
-        //}
+        public Task<DialogResult<T>> Prompt<T>(string dialogId, string prompt, IDictionary<string, object> options = null)
+        {
+            var args = new Dictionary<string, object>();
+            // TODO: assign options to args
+            if (prompt != null)
+            {
+                args["promptString"] = prompt;
+            }
+            return Begin<T>(dialogId, args);
+        }
+        public Task<DialogResult<T>> Prompt<T>(string dialogId, Activity prompt, IDictionary<string, object> options = null)
+        {
+            var args = new Dictionary<string, object>();
+            // TODO: assign options to args
+            if (prompt != null)
+            {
+                args["promptActivity"] = prompt;
+            }
+            return Begin<T>(dialogId, args);
+        }
 
         /// <summary>
         /// Continues execution of the active dialog, if there is one, by passing the context object to
@@ -89,7 +104,7 @@ namespace Microsoft.Bot.Builder.Dialogs
             {
                 // Lookup dialog
                 var dialog = Dialogs.Find<T>(Instance.Id);
-                if (dialog != null)
+                if (dialog == null)
                 {
                     throw new Exception($"DialogSet.continue(): Can't continue dialog. A dialog with an id of '{Instance.Id}' wasn't found.");
                 }
@@ -126,7 +141,7 @@ namespace Microsoft.Bot.Builder.Dialogs
         public async Task<DialogResult<T>> End<T>(T result)
         {
             // Pop active dialog off the stack
-            if (!Stack.Any())
+            if (Stack.Any())
             {
                 Stack.Pop();
             }

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Prompts;
 using static Microsoft.Bot.Builder.Prompts.PromptValidatorEx;
@@ -29,12 +30,14 @@ namespace Microsoft.Bot.Builder.Dialogs
 
         public override async Task<DialogResult<T>> DialogBegin(DialogContext dc, object dialogArgs)
         {
+            var promptOptions = new PromptOptions((IDictionary<string, object>)dialogArgs);
+
             // Persist options
             var instance = dc.Instance;
-            instance.State = dialogArgs;
+            instance.State = promptOptions;
 
             // Send initial prompt
-            await OnPrompt(dc, (PromptOptions)dialogArgs, false);
+            await OnPrompt(dc, promptOptions, false);
 
             return new DialogResult<T> { Active = true };
         }

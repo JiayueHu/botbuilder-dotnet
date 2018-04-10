@@ -7,19 +7,14 @@ using static Microsoft.Bot.Builder.Prompts.PromptValidatorEx;
 
 namespace Microsoft.Bot.Builder.Dialogs.Prompts
 {
-    public class NumberPrompt<T> : Prompt<NumberResult<T>>
+    public class PercentagePrompt : Prompt<NumberResult<float>>
     {
-        private Builder.Prompts.NumberPrompt<T> _prompt;
+        private Builder.Prompts.PercentagePrompt _prompt;
 
-        public NumberPrompt(string culture, PromptValidator<NumberResult<T>> validator = null)
+        public PercentagePrompt(string culture, PromptValidator<NumberResult<float>> validator = null)
             : base(validator)
         {
-            _prompt = new Builder.Prompts.NumberPrompt<T>(culture, validator);
-        }
-        protected NumberPrompt(Builder.Prompts.NumberPrompt<T> prompt, PromptValidator<NumberResult<T>> validator = null)
-            : base(validator)
-        {
-            _prompt = prompt;
+            _prompt = new Builder.Prompts.PercentagePrompt(culture, validator);
         }
         protected override Task OnPrompt(DialogContext dc, PromptOptions options, bool isRetry)
         {
@@ -48,9 +43,9 @@ namespace Microsoft.Bot.Builder.Dialogs.Prompts
             return Task.CompletedTask;
         }
 
-        protected override async Task<DialogResult<NumberResult<T>>> OnRecognize(DialogContext dc, PromptOptions options)
+        protected override async Task<DialogResult<NumberResult<float>>> OnRecognize(DialogContext dc, PromptOptions options)
         {
-            return new DialogResult<NumberResult<T>>
+            return new DialogResult<NumberResult<float>>
             {
                 Active = false,
                 Result = await _prompt.Recognize(dc.Context)

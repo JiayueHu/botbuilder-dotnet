@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Core.Extensions;
@@ -41,41 +42,46 @@ namespace Microsoft.Bot.Samples.Dialog.Prompts
 
         public async Task OnReceiveActivity(ITurnContext context)
         {
-            switch (context.Activity.Type)
+            try
             {
-                case ActivityTypes.Message:
+                switch (context.Activity.Type)
+                {
+                    case ActivityTypes.Message:
 
-                    var state = ConversationState<ConversationData>.Get(context);
+                        var state = ConversationState<ConversationData>.Get(context);
 
-                    var dc = _dialogs.CreateContext(context, state);
+                        var dc = _dialogs.CreateContext(context, state);
 
-                    var utterance = (context.Activity.Text ?? string.Empty).Trim().ToLower();
-                    if (utterance == "menu" || utterance == "cancel")
-                    {
-                        dc.EndAll();
-                    }
-
-                    await dc.Continue<string>();
-
-                    if (!context.Responded)
-                    {
-                        await dc.Begin<string>("mainMenu");
-                    }
-
-                    break;
-
-                case ActivityTypes.ConversationUpdate:
-                    foreach (var newMember in context.Activity.MembersAdded)
-                    {
-                        if (newMember.Id != context.Activity.Recipient.Id)
+                        var utterance = (context.Activity.Text ?? string.Empty).Trim().ToLower();
+                        if (utterance == "menu" || utterance == "cancel")
                         {
-                            await context.SendActivity("Hello and welcome to the prompt bot.");
+                            dc.EndAll();
                         }
-                    }
-                    break;
+
+                        await dc.Continue<string>();
+
+                        if (!context.Responded)
+                        {
+                            await dc.Begin<string>("mainMenu");
+                        }
+
+                        break;
+
+                    case ActivityTypes.ConversationUpdate:
+                        foreach (var newMember in context.Activity.MembersAdded)
+                        {
+                            if (newMember.Id != context.Activity.Recipient.Id)
+                            {
+                                await context.SendActivity("Hello and welcome to the prompt bot.");
+                            }
+                        }
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                await context.SendActivity($"Exception: {e.Message}");
             }
         }
-
-        //private async Task ProcessActivity(PaymentRequest, res)
     }
 }
